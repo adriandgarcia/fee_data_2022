@@ -55,7 +55,8 @@ _61,573 rows, 122 columns **Adjusted_Data**_
 Adjusted_Data <- Full %>%
   rename_all(make.names) %>%
   filter(Fund.of..Funds != "Yes",
-         US.Category.Group != "Money Market" | is.na(US.Category.Group)
+         US.Category.Group != "Money Market" | is.na(US.Category.Group),
+         is.na(Obsolete..Date)
          ) %>%
   mutate(
     Firm.Name.Mod = case_when(
@@ -86,7 +87,7 @@ Adjusted_Data <- Full %>%
   )
 
 write_csv(Adjusted_Data,
-          "~/Data/Fee_Data_2022/results/MF_Fee_Report_20220826_ag.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/MF_Fee_Report_20220826_ag.csv")
 
 ```
 
@@ -139,9 +140,8 @@ ActiveFunds <- Adjusted_Data %>%
            Sum_Assets_2021 >= 2.5e+10
          )
 
-Active_Fees <- ActiveFunds %>%
-  group_by(Firm.Name.Mod) %>%
-  summarise(
+summaryinfo <- function(x) {
+  summarise(x,
     Count = n(),
     Sum_Assts_Wted_2019 = sum(Asst_By_Fee_2019, na.rm = TRUE),
     Sum_Assets_2019 = sum(Net_Asst_2019_AVG, na.rm = TRUE),
@@ -153,9 +153,14 @@ Active_Fees <- ActiveFunds %>%
     Sum_Assets_2021 = sum(Net_Asst_2021_AVG, na.rm = TRUE),
    Fee_Wted_2021 = Sum_Assts_Wted_2021 / Sum_Assets_2021
   )
+  }
+
+Active_Fees <- ActiveFunds %>%
+  group_by(Firm.Name.Mod) %>%
+  summaryinfo()
 
 write_csv(Active_Fees,
-          "~/Data/Fee_Data_2022/results/active/fees_activefunds_firm.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/fees_activefunds_firm.csv")
 
 Active_HighFees <- Active_Fees %>%
   arrange(desc(Fee_Wted_2021)) %>%
@@ -214,18 +219,7 @@ I drop the adjusted asset figures above and gather all the columns.
 
 Active_Summary <- ActiveFunds %>% 
   ungroup() %>%
-  summarise(
-    Count = n(),
-    Sum_Assts_Wted_2019 = sum(Asst_By_Fee_2019, na.rm = TRUE),
-    Sum_Assets_2019 = sum(Net_Asst_2019_AVG, na.rm = TRUE),
-    Fee_Wted_2019 = Sum_Assts_Wted_2019 / Sum_Assets_2019,
-    Sum_Assts_Wted_2020 = sum(Asst_By_Fee_2020, na.rm = TRUE),
-    Sum_Assets_2020 = sum(Net_Asst_2020_AVG, na.rm = TRUE),
-    Fee_Wted_2020 = Sum_Assts_Wted_2020 / Sum_Assets_2020,
-    Sum_Assts_Wted_2021 = sum(Asst_By_Fee_2021, na.rm = TRUE),
-    Sum_Assets_2021 = sum(Net_Asst_2021_AVG, na.rm = TRUE),
-   Fee_Wted_2021 = Sum_Assts_Wted_2021 / Sum_Assets_2021
-  ) %>%
+  summaryinfo() %>%
   select(
     1,
     3:4,
@@ -239,7 +233,7 @@ Active_Summary <- ActiveFunds %>%
   )
 
 write_csv(Active_Summary,
-          "~/Data/Fee_Data_2022/results/active/fees_activefunds_summary.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/fees_activefunds_summary.csv")
 
 datatable(Active_Summary)
 
@@ -296,7 +290,7 @@ Active_Cat <- ActiveFunds %>%
     )
 
 write_csv(Active_Cat,
-          "~/Data/Fee_Data_2022/results/active/cat_activefunds_firm.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/cat_activefunds_firm.csv")
 
 Active_Cat_Sum <- Active_Cat %>%
   group_by(US.Category.Group) %>%  
@@ -335,7 +329,7 @@ Active_Cat_Pct <- Active_Cat %>%
   arrange(-Fee_Wted_2021, .by_group = TRUE)
 
 write_csv(Active_Cat_Pct,
-          "~/Data/Fee_Data_2022/results/active/cat_activefunds_highlow.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/cat_activefunds_highlow.csv")
 
 ```
 
@@ -461,7 +455,7 @@ Active_MSCat <- ActiveFunds %>%
   )
 
 write_csv(Active_MSCat,
-          "~/Data/Fee_Data_2022/results/active/MScat_activefunds.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/MScat_activefunds.csv")
 
 
 Active_MSCat_Sum <- Active_MSCat %>%
@@ -496,7 +490,7 @@ Active_MSCat_Pct <- Active_MSCat %>%
   arrange(-Fee_Wted_2021, .by_group = TRUE)
 
 write_csv(Active_MSCat_Pct,
-          "~/Data/Fee_Data_2022/results/active/MScat_activefunds_highlow.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/active/MScat_activefunds_highlow.csv")
 
 ```
 
@@ -560,7 +554,7 @@ Active_Summary_Shareclass <- Active_Shareclass %>%
 
 write_csv(
   Active_Summary_Shareclass,
-  "~/Data/Fee_Data_2022/results/active/shareclass_changes_activefunds.csv"
+  "~/Data/Fee_Data_2022/fee_Data_2022/results/active/shareclass_changes_activefunds.csv"
   )
 ```
 
@@ -630,18 +624,7 @@ PassiveFunds <- Adjusted_Data %>%
 
 Passive_Fees <- PassiveFunds %>%
   group_by(Firm.Name.Mod) %>%
-  summarise(
-    Count = n(),
-    Sum_Assts_Wted_2019 = sum(Asst_By_Fee_2019, na.rm = TRUE),
-    Sum_Assets_2019 = sum(Net_Asst_2019_AVG, na.rm = TRUE),
-    Fee_Wted_2019 = Sum_Assts_Wted_2019 / Sum_Assets_2019,
-    Sum_Assts_Wted_2020 = sum(Asst_By_Fee_2020, na.rm = TRUE),
-    Sum_Assets_2020 = sum(Net_Asst_2020_AVG, na.rm = TRUE),
-    Fee_Wted_2020 = Sum_Assts_Wted_2020 / Sum_Assets_2020,
-    Sum_Assts_Wted_2021 = sum(Asst_By_Fee_2021, na.rm = TRUE),
-    Sum_Assets_2021 = sum(Net_Asst_2021_AVG, na.rm = TRUE),
-    Fee_Wted_2021 = Sum_Assts_Wted_2021 / Sum_Assets_2021
-  )
+  summaryinfo()
 
 # write_csv(Passive_Fees,
 #           "fees_passivefunds_firm.csv")
@@ -706,18 +689,7 @@ I drop the adjusted asset figures above and gather all the columns.
 
 Passive_Summary <- PassiveFunds %>% 
   ungroup() %>%
-  summarise(
-    Count = n(),
-    Sum_Assts_Wted_2019 = sum(Asst_By_Fee_2019, na.rm = TRUE),
-    Sum_Assets_2019 = sum(Net_Asst_2019_AVG, na.rm = TRUE),
-    Fee_Wted_2019 = Sum_Assts_Wted_2019 / Sum_Assets_2019,
-    Sum_Assts_Wted_2020 = sum(Asst_By_Fee_2020, na.rm = TRUE),
-    Sum_Assets_2020 = sum(Net_Asst_2020_AVG, na.rm = TRUE),
-    Fee_Wted_2020 = Sum_Assts_Wted_2020 / Sum_Assets_2020,
-    Sum_Assts_Wted_2021 = sum(Asst_By_Fee_2020, na.rm = TRUE),
-    Sum_Assets_2021 = sum(Net_Asst_2021_AVG, na.rm = TRUE),
-    Fee_Wted_2021 = Sum_Assts_Wted_2021 / Sum_Assets_2021
-  ) %>%
+  summaryinfo() %>%
   select(
     1,
     3:4,
@@ -731,7 +703,7 @@ Passive_Summary <- PassiveFunds %>%
   )
 
 write_csv(Passive_Summary,
-          "~/Data/Fee_Data_2022/results/passive/fees_activefunds_summary.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/fees_activefunds_summary.csv")
 
 datatable(Passive_Summary)
 
@@ -754,21 +726,13 @@ PassiveFunds_Past <- Adjusted_Data %>%
 
 Passive_Fees_Past <- PassiveFunds_Past %>%
   group_by(Firm.Name.Mod) %>%
-  summarise(
-    Count = n(),
-    Sum_Assts_Wted_2020 = sum(Asst_By_Fee_2020, na.rm = TRUE),
-    Sum_Assets_2020 = sum(Net_Asst_2020_AVG, na.rm = TRUE),
-    Fee_Wted_2020 = Sum_Assts_Wted_2020 / Sum_Assets_2020,
-    Sum_Assts_Wted_2021 = sum(Asst_By_Fee_2021, na.rm = TRUE),
-    Sum_Assets_2021 = sum(Net_Asst_2021_AVG, na.rm = TRUE),
-    Fee_Wted_2021 = Sum_Assts_Wted_2021 / Sum_Assets_2021
-  ) %>%
+  summaryinfo() %>%
   filter(Count >= 10 &
            Sum_Assets_2021 > 0)
 
 write_csv(
   Passive_Fees_Past,
-  "~/Data/Fee_Data_2022/results/passive/past_fees_passivefunds_firm.csv"
+  "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/past_fees_passivefunds_firm.csv"
 )
 
 
@@ -785,7 +749,7 @@ Passive_LowFees_Past %>%
          6:7,
          5, 8) %>%
   
-  write_csv("~/Data/Fee_Data_2022/results/passive/past_lowfees_passivefunds_firm.csv")
+  write_csv("~/Data/Fee_Data_2022/fee_Data_2022/results/passive/past_lowfees_passivefunds_firm.csv")
 ```
 
 ## Fees by Type of Passive Fund Holdings
@@ -857,7 +821,7 @@ Passive_Cat_Pct <- Passive_Cat %>%
   group_by(Firm.Name.Mod) %>% 
   arrange(-pct_assets, .by_group = TRUE)
 
-  write_csv(Passive_Cat_Pct, "~/Data/Fee_Data_2022/results/passive/passivefunds_firm_category.csv")
+  write_csv(Passive_Cat_Pct, "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/passivefunds_firm_category.csv")
 
 
 ```
@@ -911,7 +875,7 @@ Passive_MSCat <- PassiveFunds %>%
   )
 
 write_csv(Passive_MSCat,
-          "~/Data/Fee_Data_2022/results/passive/MScat_passivefunds.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/MScat_passivefunds.csv")
 
 
 Passive_MSCat_Sum <- Passive_MSCat %>%
@@ -943,7 +907,7 @@ Passive_MSCat_Pct <- Passive_MSCat %>%
   arrange(-Fee_Wted_2021, .by_group = TRUE)
 
 write_csv(Passive_MSCat_Pct,
-          "~/Data/Fee_Data_2022/results/passive/MScat_passivefunds_highlow.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/MScat_passivefunds_highlow.csv")
 
 ```
 
@@ -1047,7 +1011,7 @@ Passive_Summary_Shareclass <- Passive_Shareclass %>%
 
 write_csv(
   Passive_Summary_Shareclass,
-  "~/Data/Fee_Data_2022/results/passive/shareclass_changes_passivefunds.csv"
+  "~/Data/Fee_Data_2022/fee_Data_2022/results/passive/shareclass_changes_passivefunds.csv"
   )
 
 ```
@@ -1161,7 +1125,7 @@ Category <- Adjusted_Data %>%
   )
 
 write_csv(Category,
-          "~/Data/Fee_Data_2022/results/shareclass_cuts_total.csv")
+          "~/Data/Fee_Data_2022/fee_Data_2022/results/shareclass_cuts_total.csv")
 
 Summary_Category <- Category %>%
   group_by(FeeChange) %>%
