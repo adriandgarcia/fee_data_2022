@@ -56,8 +56,7 @@ Adjusted_Data <- Full %>%
   rename_all(make.names) %>%
   filter(Fund.of..Funds != "Yes",
          US.Category.Group != "Money Market" | is.na(US.Category.Group),
-         is.na(Obsolete..Date) |
-           Obsolete..Date < mdy("01-01-2022")
+         is.na(Obsolete..Date)
          ) %>%
   mutate(
     Firm.Name.Mod = case_when(
